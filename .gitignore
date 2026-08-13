@@ -1,0 +1,38 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datos (no versionar datos crudos/procesados pesados)
+data/raw/*
+data/processed/*
+data/external/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Outputs generados
+outputs/figures/*
+outputs/reports/*
+!outputs/figures/.gitkeep
+!outputs/reports/.gitkeep
+
+# Config con credenciales/secretos
+config/secrets.yaml
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
