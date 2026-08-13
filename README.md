@@ -56,6 +56,16 @@ pip install -r requirements.txt
 
 ## Uso
 
+### Evolución oficial del mercado (INE, sin credenciales)
+
+```powershell
+python scripts/fetch_ine_data.py
+```
+
+Descarga el Índice de Precios de Vivienda del INE (Nacional + comunidades autónomas), lo guarda en `data/processed/ine_ipv.csv` y genera `outputs/figures/ine_ipv_evolucion.png`. Explora el resultado en `notebooks/02_ine_evolucion.ipynb`. Elige otras regiones con `--regiones "Nacional" "País Vasco" ...` (ver claves válidas en `src/data/ine_ipv.SERIES_INDICE_GENERAL`).
+
+### Anuncios individuales (Idealista API, requiere credenciales)
+
 1. Configura el portal/ciudad/rango en `config/settings.yaml`.
 2. Ejecuta el scraper: `python scripts/run_pipeline.py --step scrape`
 3. Limpia los datos: `python scripts/run_pipeline.py --step clean`

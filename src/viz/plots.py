@@ -55,6 +55,25 @@ def plot_precio_m2_por_habitaciones(agg: pd.DataFrame) -> plt.Figure:
     return fig
 
 
+def plot_ipv_evolucion(df: pd.DataFrame) -> plt.Figure:
+    """Evolución del Índice de Precios de Vivienda (INE). Espera columnas
+    periodo, region, indice (ver src/data/ine_ipv.obtener_evolucion_por_region).
+    Máximo 8 regiones (límite de la paleta categórica de orden fijo)."""
+    fig, ax = plt.subplots(figsize=(9, 5))
+    regiones = df["region"].unique()[:8]
+    for i, region in enumerate(regiones):
+        subset = df[df["region"] == region]
+        ax.plot(subset["periodo"], subset["indice"], label=region,
+                color=CATEGORICAL[i % len(CATEGORICAL)], linewidth=2)
+
+    ax.set_ylabel("Índice de Precios de Vivienda (base INE)")
+    ax.set_title("Evolución del IPV por comunidad autónoma", color=INK_PRIMARY, loc="left")
+    ax.legend(frameon=False, labelcolor=INK_SECONDARY)
+    _style_ax(ax)
+    fig.tight_layout()
+    return fig
+
+
 def plot_evolucion_temporal(evol: pd.DataFrame, by: str | None = None) -> plt.Figure:
     """Línea de evolución temporal. Si `by` está presente, una línea por categoría
     (máximo 8 categorías — usa la paleta categórica en orden fijo)."""
