@@ -1,0 +1,41 @@
+# Configuración del proyecto
+
+idealista_api:
+  # Credenciales vía variables de entorno IDEALISTA_API_KEY / IDEALISTA_API_SECRET
+  # (solicitar acceso en https://developers.idealista.com/access-request)
+  country: "es"
+  operation: "sale"          # sale | rent
+  property_type: "homes"
+  max_items_per_page: 50
+
+ine_ipv:
+  # Índice de Precios de Vivienda del INE, para contrastar con datos oficiales
+  operacion: "IPV"
+  docs_url: "https://www.ine.es/dyngs/DAB/index.htm?cid=1100"
+
+scraper_html:
+  # Solo como último recurso, para portales SIN API oficial y que permitan
+  # scraping en su robots.txt/ToS. Verifica siempre antes de usar.
+  base_url: "https://ejemplo-portal.com"
+  user_agent: "analisis-viviendas-bot/1.0 (uso personal; contacto: tu-email@ejemplo.com)"
+  request_delay_seconds: 3        # tiempo mínimo entre peticiones
+  max_pages: 50
+  respect_robots_txt: true
+
+ubicaciones:
+  - ciudad: "Madrid"
+    zonas: ["Chamberí", "Salamanca", "Retiro"]
+  - ciudad: "Barcelona"
+    zonas: ["Eixample", "Gràcia", "Sants"]
+
+columnas_esperadas:
+  - fecha_publicacion
+  - precio
+  - superficie_m2
+  - habitaciones
+  - banos
+  - ciudad
+  - zona
+  - direccion
+  - tipo_inmueble
+  - url
