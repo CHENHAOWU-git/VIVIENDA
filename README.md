@@ -103,6 +103,20 @@ python scripts/fetch_ine_data.py
 
 Descarga el Índice de Precios de Vivienda del INE (Nacional + comunidades autónomas), lo guarda en `data/processed/ine_ipv.csv` y genera `outputs/figures/ine_ipv_evolucion.png`. Explora el resultado en `notebooks/02_ine_evolucion.ipynb`. Elige otras regiones con `--regiones "Nacional" "País Vasco" ...` (ver claves válidas en `src/data/ine_ipv.SERIES_INDICE_GENERAL`).
 
+## Automatización
+
+Solo el **IPV del INE** se actualiza solo con el tiempo (nueva publicación cada trimestre) — los datasets abiertos de Zenodo son publicaciones estáticas, así que programar su re-descarga no construye ninguna serie temporal por sí sola (repetiría los mismos datos). Por eso `data/processed/ine_ipv.csv` y `outputs/figures/ine_ipv_evolucion.png` son los **únicos** archivos generados que se versionan en git (excepción explícita en `.gitignore`): el propio historial de commits sirve de registro de cuándo apareció cada trimestre nuevo.
+
+`scripts/actualizar_todo.py` re-ejecuta todo el pipeline y, si detecta cambios en esos dos archivos, hace commit y push automáticamente a `main` (sin pasar por PR — pensado para una tarea desatendida; si prefieres revisar cada actualización antes de que llegue a `main`, cambia el `git push origin HEAD:main` del script por crear una rama + PR, como en el resto del proyecto).
+
+Para programarlo en Windows (tarea mensual, el día 1 a las 9:00):
+
+```powershell
+schtasks /create /tn "AnalisisViviendas-ActualizarINE" /tr "'C:\Users\IvanChenhaoWu\Documents\analisis-viviendas\.venv\Scripts\python.exe' 'C:\Users\IvanChenhaoWu\Documents\analisis-viviendas\scripts\actualizar_todo.py'" /sc monthly /d 1 /st 09:00
+```
+
+Revisa los logs en `outputs/reports/actualizar_todo.log`. Quitar la tarea: `schtasks /delete /tn "AnalisisViviendas-ActualizarINE" /f`.
+
 ### Anuncios individuales (Idealista API, requiere credenciales)
 
 1. Configura el portal/ciudad/rango en `config/settings.yaml`.
