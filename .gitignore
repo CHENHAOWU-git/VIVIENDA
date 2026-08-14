@@ -20,12 +20,17 @@ data/external/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/external/.gitkeep
+# Excepcion: el IPV del INE sí se versiona -- es la única fuente que se
+# actualiza sola (trimestralmente), así que el historial de git sirve como
+# registro de cuándo aparece cada trimestre nuevo (ver scripts/actualizar_todo.py)
+!data/processed/ine_ipv.csv
 
 # Outputs generados
 outputs/figures/*
 outputs/reports/*
 !outputs/figures/.gitkeep
 !outputs/reports/.gitkeep
+!outputs/figures/ine_ipv_evolucion.png
 
 # Config con credenciales/secretos
 config/secrets.yaml

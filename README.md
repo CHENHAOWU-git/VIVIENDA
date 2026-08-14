@@ -51,6 +51,13 @@ analisis-viviendas/
 
 Otros datasets evaluados y descartados por no cumplir precio+m²+habitaciones+baños+zona a nivel de vivienda individual sin cuenta: `Data-Market/inmuebles-en-venta` (sin baños), `idealista18` (tiene todo pero solo se distribuye como paquete R — se probó leerlo desde Python con la librería `rdata`, funciona para los datos de la vivienda pero no para los polígonos de barrio por un bug de codificación en esa librería), datasets de Mendeley de Madrid/Teruel (agregados por barrio, no por vivienda individual).
 
+### Venta vs. alquiler — no mezclar el precio/m²
+
+Los datasets combinados incluyen tanto venta (€/m²) como alquiler (€/mes/m²): son magnitudes distintas y **nunca deben promediarse juntas**. Por eso:
+- `clean_listings()` guarda `tipo_operacion` (`venta`/`alquiler`) y aplica un rango de outliers distinto a cada una (`UMBRALES_PRECIO_M2` en `src/data/clean.py`) — con un único umbral pensado para venta, el alquiler entero se descartaba por completo (bug real, corregido).
+- Cualquier agregación (`precio_m2_por_*`, gráficos) debe filtrar antes por `tipo_operacion`.
+- El IPV del INE es un **índice de crecimiento** desde un año base, no un precio absoluto — tampoco es comparable directamente contra tu precio/m² en €. `scripts/analisis_avanzado.py` los muestra siempre en gráficos separados, nunca superpuestos.
+
 ### Reglas generales
 1. Los datasets abiertos son snapshots estáticos (no se actualizan solos) — para evolución temporal propia, vuelve a descargarlos/combínalos periódicamente o usa la API de Idealista cuando tengas credenciales.
 2. Si decides scrapear un portal sin API, revisa antes `robots.txt` y los Términos de Servicio del sitio concreto.
@@ -75,6 +82,19 @@ python scripts/fetch_open_datasets.py
 
 Descarga y combina los datasets de la sección anterior, limpia el resultado y lo guarda en `data/processed/open_datasets_clean.csv`. Explóralo en `notebooks/03_open_datasets.ipynb`.
 
+### Análisis avanzado: mapa y ranking (sin credenciales)
+
+```powershell
+python scripts/analisis_avanzado.py
+```
+
+Requiere haber ejecutado antes `fetch_open_datasets.py`. Genera:
+- `outputs/figures/mapa_precio_m2_alquiler.png` — mapa geolocalizado del alquiler (Madrid + Alicante, únicas ciudades con coordenadas en los datasets actuales).
+- `outputs/figures/ranking_ciudades.png` — ranking de ciudades por precio/m² de venta, relativo a la media de tu propio snapshot.
+- `outputs/figures/ipv_comunidades_snapshot.png` — tendencia oficial del INE para las comunidades autónomas con más peso en tu snapshot (contexto, no superpuesto con lo anterior — ver nota sobre venta/alquiler arriba).
+
+Notebook equivalente: `notebooks/04_analisis_avanzado.ipynb`.
+
 ### Evolución oficial del mercado (INE, sin credenciales)
 
 ```powershell
@@ -82,6 +102,20 @@ python scripts/fetch_ine_data.py
 ```
 
 Descarga el Índice de Precios de Vivienda del INE (Nacional + comunidades autónomas), lo guarda en `data/processed/ine_ipv.csv` y genera `outputs/figures/ine_ipv_evolucion.png`. Explora el resultado en `notebooks/02_ine_evolucion.ipynb`. Elige otras regiones con `--regiones "Nacional" "País Vasco" ...` (ver claves válidas en `src/data/ine_ipv.SERIES_INDICE_GENERAL`).
+
+## Automatización
+
+Solo el **IPV del INE** se actualiza solo con el tiempo (nueva publicación cada trimestre) — los datasets abiertos de Zenodo son publicaciones estáticas, así que programar su re-descarga no construye ninguna serie temporal por sí sola (repetiría los mismos datos). Por eso `data/processed/ine_ipv.csv` y `outputs/figures/ine_ipv_evolucion.png` son los **únicos** archivos generados que se versionan en git (excepción explícita en `.gitignore`): el propio historial de commits sirve de registro de cuándo apareció cada trimestre nuevo.
+
+`scripts/actualizar_todo.py` re-ejecuta todo el pipeline y, si detecta cambios en esos dos archivos, hace commit y push automáticamente a `main` (sin pasar por PR — pensado para una tarea desatendida; si prefieres revisar cada actualización antes de que llegue a `main`, cambia el `git push origin HEAD:main` del script por crear una rama + PR, como en el resto del proyecto).
+
+Para programarlo en Windows (tarea mensual, el día 1 a las 9:00):
+
+```powershell
+schtasks /create /tn "AnalisisViviendas-ActualizarINE" /tr "'C:\Users\IvanChenhaoWu\Documents\analisis-viviendas\.venv\Scripts\python.exe' 'C:\Users\IvanChenhaoWu\Documents\analisis-viviendas\scripts\actualizar_todo.py'" /sc monthly /d 1 /st 09:00
+```
+
+Revisa los logs en `outputs/reports/actualizar_todo.log`. Quitar la tarea: `schtasks /delete /tn "AnalisisViviendas-ActualizarINE" /f`.
 
 ### Anuncios individuales (Idealista API, requiere credenciales)
 
