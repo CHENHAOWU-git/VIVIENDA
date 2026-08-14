@@ -47,22 +47,31 @@ def _mostrar(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=COLUMNAS_LEGIBLES)
 
 
-@st.cache_data
+@st.cache_data(ttl=86400)
 def cargar_listings() -> pd.DataFrame:
+    """Lee el CSV ya generado si existe (uso local normal); si no (ej. un
+    despliegue recién clonado, donde open_datasets_clean.csv no está en git
+    porque se regenera localmente), descarga y limpia los datos al vuelo."""
     ruta = PROCESSED_DIR / "open_datasets_clean.csv"
-    if not ruta.exists():
-        return pd.DataFrame()
-    df = pd.read_csv(ruta, parse_dates=["fecha_publicacion"])
+    if ruta.exists():
+        df = pd.read_csv(ruta, parse_dates=["fecha_publicacion"])
+    else:
+        from src.data.clean import clean_listings
+        from src.data.open_datasets import cargar_todo
+        df = clean_listings(cargar_todo())
     df["id"] = df.index.astype(str)
     return df
 
 
-@st.cache_data
+@st.cache_data(ttl=86400)
 def cargar_ine() -> pd.DataFrame:
+    """El IPV sí está versionado en git (ver .gitignore), pero por si acaso
+    se ejecuta en un sitio donde no llegó a clonarse, también tiene fallback."""
     ruta = PROCESSED_DIR / "ine_ipv.csv"
-    if not ruta.exists():
-        return pd.DataFrame()
-    return pd.read_csv(ruta, parse_dates=["periodo"])
+    if ruta.exists():
+        return pd.read_csv(ruta, parse_dates=["periodo"])
+    from src.data.ine_ipv import obtener_evolucion_por_region
+    return obtener_evolucion_por_region()
 
 
 def aplicar_filtros(df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
