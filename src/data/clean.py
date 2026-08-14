@@ -7,13 +7,18 @@ import pandas as pd
 def clean_listings(df: pd.DataFrame) -> pd.DataFrame:
     """Limpia el dataframe crudo de anuncios.
 
-    - Elimina duplicados por URL.
+    - Elimina duplicados por URL (o por fila completa si la fuente no trae URL,
+      ya que pandas trata NaN == NaN al deduplicar y una columna url vacía
+      colapsaría todas las filas en una sola).
     - Descarta filas sin precio o superficie (no se puede calcular precio/m2).
     - Convierte tipos numéricos y fecha.
     - Calcula precio_m2.
     - Descarta outliers evidentes (precio/m2 fuera de un rango razonable).
     """
-    df = df.drop_duplicates(subset="url").copy()
+    if df["url"].notna().any():
+        df = df.drop_duplicates(subset="url").copy()
+    else:
+        df = df.drop_duplicates().copy()
 
     df["precio"] = pd.to_numeric(df["precio"], errors="coerce")
     df["superficie_m2"] = pd.to_numeric(df["superficie_m2"], errors="coerce")
