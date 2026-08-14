@@ -7,10 +7,25 @@ Proyecto para analizar precios de viviendas y su evolución en función de:
 - Localización (barrio/ciudad)
 - Evolución temporal del precio
 
+## App interactiva
+
+```powershell
+streamlit run app.py
+```
+
+Abre una app en el navegador (`http://localhost:8501`) con 4 pestañas:
+- **📋 Tablas y variables** — tabla filtrable + gráficos de precio/m² por ciudad, habitaciones y baños
+- **🗺️ Mapa** — mapa geolocalizado (alquiler, Madrid/Alicante — únicas ciudades con coordenadas)
+- **📈 Evolución INE** — tendencia oficial por comunidad autónoma
+- **⚖️ Comparador** — elige entre 2 y 5 viviendas y obtén pros/contras automáticos (mejor/peor precio, precio/m², superficie, habitaciones, baños entre las comparadas, y frente a la media de su zona)
+
+Filtros compartidos en la barra lateral (tipo de operación, ciudad, precio/m², habitaciones, baños). Requiere haber ejecutado antes `fetch_open_datasets.py` y `fetch_ine_data.py`.
+
 ## Estructura del proyecto
 
 ```
 analisis-viviendas/
+├── app.py               # App interactiva (Streamlit)
 ├── config/             # Configuración (portales, ciudades, rutas)
 │   └── settings.yaml
 ├── data/

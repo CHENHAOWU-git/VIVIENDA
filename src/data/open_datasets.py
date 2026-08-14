@@ -21,6 +21,15 @@ import requests
 
 RAW_DIR = Path("data/raw")
 
+# El CSV de Fotocasa nombra las ciudades como "Madrid Capital" / "Alicante /
+# Alacant", mientras que properties_Spain usa "Madrid" / "Alicante" -- sin
+# normalizar, la app las trata como ciudades distintas (bug real detectado
+# al revisar el mapa/gráficos combinados).
+NORMALIZACION_CIUDAD = {
+    "Madrid Capital": "Madrid",
+    "Alicante / Alacant": "Alicante",
+}
+
 FOTOCASA_URL = "https://zenodo.org/record/5599647/files/Fotocasa.csv?download=1"
 PROPERTIES_SPAIN_URL = "https://zenodo.org/records/14028180/files/properties_Spain.csv?download=1"
 
@@ -61,7 +70,7 @@ def cargar_fotocasa_madrid_alicante() -> pd.DataFrame:
         "superficie_m2": pd.to_numeric(df["surface"], errors="coerce"),
         "habitaciones": pd.to_numeric(df["rooms"], errors="coerce"),
         "banos": pd.to_numeric(df["bathrooms"], errors="coerce"),
-        "ciudad": df["city"].str.strip(),
+        "ciudad": df["city"].str.strip().replace(NORMALIZACION_CIUDAD),
         "zona": df["neighborhood"].fillna(df["district"]).str.strip(),
         "direccion": df["district"],
         "tipo_inmueble": df["buildingType"],
