@@ -51,6 +51,13 @@ analisis-viviendas/
 
 Otros datasets evaluados y descartados por no cumplir precio+m²+habitaciones+baños+zona a nivel de vivienda individual sin cuenta: `Data-Market/inmuebles-en-venta` (sin baños), `idealista18` (tiene todo pero solo se distribuye como paquete R — se probó leerlo desde Python con la librería `rdata`, funciona para los datos de la vivienda pero no para los polígonos de barrio por un bug de codificación en esa librería), datasets de Mendeley de Madrid/Teruel (agregados por barrio, no por vivienda individual).
 
+### Venta vs. alquiler — no mezclar el precio/m²
+
+Los datasets combinados incluyen tanto venta (€/m²) como alquiler (€/mes/m²): son magnitudes distintas y **nunca deben promediarse juntas**. Por eso:
+- `clean_listings()` guarda `tipo_operacion` (`venta`/`alquiler`) y aplica un rango de outliers distinto a cada una (`UMBRALES_PRECIO_M2` en `src/data/clean.py`) — con un único umbral pensado para venta, el alquiler entero se descartaba por completo (bug real, corregido).
+- Cualquier agregación (`precio_m2_por_*`, gráficos) debe filtrar antes por `tipo_operacion`.
+- El IPV del INE es un **índice de crecimiento** desde un año base, no un precio absoluto — tampoco es comparable directamente contra tu precio/m² en €. `scripts/analisis_avanzado.py` los muestra siempre en gráficos separados, nunca superpuestos.
+
 ### Reglas generales
 1. Los datasets abiertos son snapshots estáticos (no se actualizan solos) — para evolución temporal propia, vuelve a descargarlos/combínalos periódicamente o usa la API de Idealista cuando tengas credenciales.
 2. Si decides scrapear un portal sin API, revisa antes `robots.txt` y los Términos de Servicio del sitio concreto.
@@ -74,6 +81,19 @@ python scripts/fetch_open_datasets.py
 ```
 
 Descarga y combina los datasets de la sección anterior, limpia el resultado y lo guarda en `data/processed/open_datasets_clean.csv`. Explóralo en `notebooks/03_open_datasets.ipynb`.
+
+### Análisis avanzado: mapa y ranking (sin credenciales)
+
+```powershell
+python scripts/analisis_avanzado.py
+```
+
+Requiere haber ejecutado antes `fetch_open_datasets.py`. Genera:
+- `outputs/figures/mapa_precio_m2_alquiler.png` — mapa geolocalizado del alquiler (Madrid + Alicante, únicas ciudades con coordenadas en los datasets actuales).
+- `outputs/figures/ranking_ciudades.png` — ranking de ciudades por precio/m² de venta, relativo a la media de tu propio snapshot.
+- `outputs/figures/ipv_comunidades_snapshot.png` — tendencia oficial del INE para las comunidades autónomas con más peso en tu snapshot (contexto, no superpuesto con lo anterior — ver nota sobre venta/alquiler arriba).
+
+Notebook equivalente: `notebooks/04_analisis_avanzado.ipynb`.
 
 ### Evolución oficial del mercado (INE, sin credenciales)
 

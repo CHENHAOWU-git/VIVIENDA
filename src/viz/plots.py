@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 
 CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 SEQUENTIAL_BLUE = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
@@ -50,6 +51,49 @@ def plot_precio_m2_por_habitaciones(agg: pd.DataFrame) -> plt.Figure:
     ax.set_xlabel("Habitaciones")
     ax.set_ylabel("Precio medio por m² (€)")
     ax.set_title("Precio/m² por número de habitaciones", color=INK_PRIMARY, loc="left")
+    _style_ax(ax)
+    fig.tight_layout()
+    return fig
+
+
+def plot_mapa_precio_m2(df: pd.DataFrame, titulo: str = "Precio/m² por ubicación") -> plt.Figure:
+    """Mapa de dispersión geolocalizado: un punto por vivienda (longitud/latitud),
+    coloreado por precio_m2 con una rampa secuencial de un solo tono (magnitud).
+    Espera columnas longitud, latitud, precio_m2."""
+    data = df.dropna(subset=["longitud", "latitud", "precio_m2"])
+    # Descarta coordenadas (0, 0) ("Null Island") y otras claramente fuera de
+    # España — errores de geocodificación típicos en datasets scrapeados que
+    # si no se filtran descuadran la escala del mapa entero.
+    data = data[data["latitud"].between(27, 44) & data["longitud"].between(-19, 5)]
+    fig, ax = plt.subplots(figsize=(8, 7))
+    cmap = LinearSegmentedColormap.from_list("secuencial_azul", SEQUENTIAL_BLUE)
+    scatter = ax.scatter(data["longitud"], data["latitud"], c=data["precio_m2"],
+                          cmap=cmap, s=40, edgecolors=SURFACE, linewidths=0.5)
+    cbar = fig.colorbar(scatter, ax=ax)
+    cbar.set_label("Precio/m² (€)", color=INK_SECONDARY)
+    cbar.ax.yaxis.set_tick_params(color=INK_MUTED, labelcolor=INK_MUTED)
+    ax.set_xlabel("Longitud")
+    ax.set_ylabel("Latitud")
+    ax.set_aspect("equal")
+    ax.set_title(titulo, color=INK_PRIMARY, loc="left")
+    _style_ax(ax)
+    fig.tight_layout()
+    return fig
+
+
+def plot_ranking_ciudades(df: pd.DataFrame) -> plt.Figure:
+    """Barras: precio/m² relativo a la media de las ciudades presentes en tus
+    datos (100 = esa media). Solo usa tu propio snapshot — el IPV del INE es
+    un índice de crecimiento desde un año base, no un nivel de precio, así
+    que no es comparable directamente contra un precio/m² absoluto (ver
+    plot_ipv_evolucion para la tendencia oficial). Espera columnas ciudad,
+    indice_propio."""
+    data = df.sort_values("indice_propio")
+    fig, ax = plt.subplots(figsize=(8, 0.4 * len(data) + 1))
+    ax.barh(data["ciudad"], data["indice_propio"], color=CATEGORICAL[0], height=0.6)
+    ax.axvline(100, color=INK_MUTED, linewidth=1, linestyle="--")
+    ax.set_xlabel("Precio/m² relativo a la media de tus ciudades (100 = media)")
+    ax.set_title("Ranking de ciudades en tu snapshot (venta)", color=INK_PRIMARY, loc="left")
     _style_ax(ax)
     fig.tight_layout()
     return fig

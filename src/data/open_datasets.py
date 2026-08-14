@@ -27,6 +27,7 @@ PROPERTIES_SPAIN_URL = "https://zenodo.org/records/14028180/files/properties_Spa
 COLUMNAS_ESTANDAR = [
     "fecha_publicacion", "precio", "superficie_m2", "habitaciones",
     "banos", "ciudad", "zona", "direccion", "tipo_inmueble", "url",
+    "latitud", "longitud", "tipo_operacion",
 ]
 
 
@@ -65,6 +66,9 @@ def cargar_fotocasa_madrid_alicante() -> pd.DataFrame:
         "direccion": df["district"],
         "tipo_inmueble": df["buildingType"],
         "url": None,
+        "latitud": pd.to_numeric(df["latitude"], errors="coerce"),
+        "longitud": pd.to_numeric(df["longitude"], errors="coerce"),
+        "tipo_operacion": "alquiler",
     })[COLUMNAS_ESTANDAR]
 
 
@@ -91,6 +95,9 @@ def cargar_properties_spain() -> pd.DataFrame:
         "direccion": df["Street"],
         "tipo_inmueble": df["Property_Type"],
         "url": None,
+        "latitud": float("nan"),
+        "longitud": float("nan"),
+        "tipo_operacion": df["Contrat"].str.strip().str.lower(),
     })[COLUMNAS_ESTANDAR]
 
 
